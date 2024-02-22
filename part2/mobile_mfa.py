@@ -218,7 +218,7 @@ class BioConnect:
 	# ===== getAuthenticatorStatus: Mobile phone registration status
 
 	def getAuthenticatorStatus(self):
-
+		# TODO
 		# >>> Add code here to call
 		#    .../v2/users/<userId>/authenicators/<authenticatorId>
 		# and process the response
@@ -232,6 +232,7 @@ class BioConnect:
 		transactionId = '%d' % int(time.time()),
 		message='Login request'):
 
+		# TODO
 		# >>> Add code here to call
 		#     .../v2/user_verifications
 		# to push an authentication request to the mobile device
@@ -242,6 +243,7 @@ class BioConnect:
 
 	def getStepupStatus(self):
 
+		# TODO
 		# >>> Add code here to call
 		#     .../v2/user_verifications/<verificationId>
 		# to poll for the current status of the verification
