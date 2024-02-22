@@ -35,14 +35,14 @@ hex_to_bin(char * input, uint8_t * output)
 	// As instructed, assume 20 is the only valid length
 	if (strlen(input) != SECRET_LEN) {
 		fprintf(stderr, "Error: Invalid length of secret.\n");
-        exit(EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
 
 	for (int i = 0; i < SECRET_LEN; i += 2) {
 		// For each pair of hex's, shift the upper 4 bits of binary to the left by 4 bits
 		// Append the lower 4 bits to the vacant positions
-        output[i / 2] = (char_to_dec(input[i]) << 4) | char_to_dec(input[i + 1]);
-    }
+		output[i / 2] = (char_to_dec(input[i]) << 4) | char_to_dec(input[i + 1]);
+	}
 }
 
 int
