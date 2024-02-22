@@ -211,18 +211,12 @@ class BioConnect:
         print("%s\n" % activationString)
 
     # ===== getAuthenticatorStatus: Mobile phone registration status
-
     def getAuthenticatorStatus(self):
-        # TODO
-        # >>> Add code here to call
-        # createUser() ->  userId
-        # createAuthenticator() -> authenticatorId
-        # call GET to https://.../v2/users/<userId>/authenticators/<authenticatorId>
-        #
-        # if(status is active and at least biometric modalities is enrolled) -> active
 
-        BioConnect.createUser(self)
-        BioConnect.createAuthenticator(self)
+        # BioConnect.createUser(self)
+        # BioConnect.createAuthenticator(self)
+        # if not self.userId or not self.authenticatorId:
+        # 	return ''
 
         url = f'https://.../v2/users/{self.userId}/authenticators/{self.authenticatorId}'
 
@@ -234,15 +228,10 @@ class BioConnect:
             'bctoken': self.bctoken
         }
 
-        data = {
-
-        }
-
-        result = requests.get(url, data=json.dumps(data), headers=headers)
+        result = requests.get(url, headers=headers)
 
         if result == False:
             print(headers)
-            print(json.dumps(data))
             print(result.content)
             sys.exit("Error: unable to create user")
 
@@ -269,23 +258,66 @@ class BioConnect:
                    transactionId='%d' % int(time.time()),
                    message='Login request'):
 
-        # TODO
-        # >>> Add code here to call
-        #     .../v2/user_verifications
-        # to push an authentication request to the mobile device
+        url = 'https://.../v2/user_verifications'
 
-        pass
+        headers = {
+            'Content-Type': 'application/json',
+            'accept': 'application/json',
+            'bcaccesskey': self.bcaccesskey,
+            'bcentitykey': self.bcentitykey,
+            'bctoken': self.bctoken
+        }
+
+        data = {
+            'uuid': self.userId,
+            'transaction_id': transactionId,
+            'message': 'Login request'
+        }
+
+        result = requests.post(url, data=json.dumps(data), headers=headers)
+
+        if result == False:
+            # Error: we did not receive an HTTP/200
+            print(headers)
+            print(json.dumps(data))
+            print(result.content)
+            sys.exit("Error: unable to create user")
+
+        try:
+            # Parse the JSON reply
+            reply = json.loads(result.content.decode('utf-8'))
+            self.stepupId = reply.get("uuid")
+        except ValueError:
+            self.stepupId = ""
 
     # ===== getStepupStatus: Fetches the status of the user auth request
 
     def getStepupStatus(self):
 
-        # TODO
-        # >>> Add code here to call
-        #     .../v2/user_verifications/<verificationId>
-        # to poll for the current status of the verification
+        url = f"https://.../v2/user_verifications/{self.stepupId}"
 
-        return ('declined')
+        headers = {
+            'Content-Type': 'application/json',
+            'accept': 'application/json',
+            'bcaccesskey': self.bcaccesskey,
+            'bcentitykey': self.bcentitykey,
+            'bctoken': self.bctoken
+        }
+
+        result = requests.get(url, headers=headers)
+
+        if result == False:
+            print(headers)
+            print(result.content)
+            sys.exit("Error: unable to create user")
+
+        try:
+            reply = json.loads(result.content.decode('utf-8'))
+            self.stepupId = reply.get("status")
+        except ValueError:
+            self.stepupId = "declined"
+
+        return self.stepupId
 
     # ===== deleteUser: Deletes the user and mobile phone entries
 
