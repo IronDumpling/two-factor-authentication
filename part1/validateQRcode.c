@@ -82,13 +82,13 @@ validateTOTP(char * secret_hex, char * TOTP_string)
 		opad[i] ^= 0x5c;
 	}
 
-    uint8_t timer[DATA_SIZE];
-    int counter = (time(NULL)) / 30;
+	uint8_t timer[DATA_SIZE];
+	int counter = (time(NULL)) / 30;
 
-    for (int i = 7; i >= 0; i--) {
-        timer[i] = counter & 0xff;
-        counter >>= 8;
-    }
+	for (int i = 7; i >= 0; i--) {
+		timer[i] = counter & 0xff;
+		counter >>= 8;
+	}
 
 	SHA1_INFO ctx;
 	uint8_t inner_hash[SHA1_DIGEST_LENGTH];
