@@ -213,12 +213,11 @@ class BioConnect:
     # ===== getAuthenticatorStatus: Mobile phone registration status
     def getAuthenticatorStatus(self):
 
-        # BioConnect.createUser(self)
-        # BioConnect.createAuthenticator(self)
-        # if not self.userId or not self.authenticatorId:
-        # 	return ''
-
-        url = f'https://.../v2/users/{self.userId}/authenticators/{self.authenticatorId}'
+        if self.userId == '' or self.authenticatorId == '':
+            return ''
+        
+        global hostname
+        url = f'https://{hostname}/v2/users/{self.userId}/authenticators/{self.authenticatorId}'
 
         headers = {
             'Content-Type': 'application/json',
@@ -233,7 +232,7 @@ class BioConnect:
         if result == False:
             print(headers)
             print(result.content)
-            sys.exit("Error: unable to create user")
+            sys.exit("Error: unable to get authenticator status")
 
         try:
             # Parse the JSON reply
@@ -248,7 +247,9 @@ class BioConnect:
                 return 'active'
 
         except ValueError:
-            return ''
+            print(headers)
+            print(result.content)
+            sys.exit("Error: unable to get authenticator status")
 
         return ''
 
@@ -258,7 +259,8 @@ class BioConnect:
                    transactionId='%d' % int(time.time()),
                    message='Login request'):
 
-        url = 'https://.../v2/user_verifications'
+        global hostname
+        url = f'https://{hostname}/v2/user_verifications'
 
         headers = {
             'Content-Type': 'application/json',
@@ -269,7 +271,7 @@ class BioConnect:
         }
 
         data = {
-            'uuid': self.userId,
+            'user_uuid': self.userId,
             'transaction_id': transactionId,
             'message': 'Login request'
         }
@@ -281,20 +283,24 @@ class BioConnect:
             print(headers)
             print(json.dumps(data))
             print(result.content)
-            sys.exit("Error: unable to create user")
+            sys.exit("Error: unable to send step up")
 
         try:
             # Parse the JSON reply
             reply = json.loads(result.content.decode('utf-8'))
-            self.stepupId = reply.get("uuid")
+            self.stepupId = reply.get("user_verification", {}).get("uuid")
+            print("verification id " + self.stepupId + "\n")
         except ValueError:
-            self.stepupId = ""
+            print(headers)
+            print(result.content)
+            sys.exit("Error: unable to send step up")
 
     # ===== getStepupStatus: Fetches the status of the user auth request
 
     def getStepupStatus(self):
 
-        url = f"https://.../v2/user_verifications/{self.stepupId}"
+        global hostname
+        url = f"https://{hostname}/v2/user_verifications/{self.stepupId}"
 
         headers = {
             'Content-Type': 'application/json',
@@ -309,15 +315,16 @@ class BioConnect:
         if result == False:
             print(headers)
             print(result.content)
-            sys.exit("Error: unable to create user")
+            sys.exit("Error: unable to get step up status")
 
         try:
             reply = json.loads(result.content.decode('utf-8'))
-            self.stepupId = reply.get("status")
+            status = reply.get("user_verification", {}).get("status")
+            return status
         except ValueError:
-            self.stepupId = "declined"
-
-        return self.stepupId
+            print(headers)
+            print(result.content)
+            sys.exit("Error: unable to get step up status")
 
     # ===== deleteUser: Deletes the user and mobile phone entries
 
@@ -396,6 +403,7 @@ for i in range(120):
 
     if session.getAuthenticatorStatus() == "active":
         break
+
     time.sleep(1)
 
 if status != "active":
@@ -410,14 +418,13 @@ for i in range(3):
     password = input("password: ")
 
     if username == 'ece568' and password == 'password':
-
         session.sendStepup()
-
         status = session.getStepupStatus()
+        print("status: " + status)
         while status == "pending":
             time.sleep(1)
             status = session.getStepupStatus()
-
+            print("status after pending: " + status)
     else:
         status = "invalid"
 
@@ -425,6 +432,6 @@ for i in range(3):
         print("login successful\n")
         break
     else:
-        print("login failed\n")
+        print("login failed " + status + "\n")
 
 del session
