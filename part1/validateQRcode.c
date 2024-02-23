@@ -51,9 +51,9 @@ hex_to_bin(char * input, uint8_t * output)
 void
 SHA1_hash(SHA1_INFO * ctx, uint8_t * buffer_1, int count_1, uint8_t * buffer_2, int count_2, uint8_t * digest) {
 	sha1_init(ctx);
-    sha1_update(ctx, buffer_1, count_1);
-    sha1_update(ctx, buffer_2, count_2);
-    sha1_final(ctx, digest);
+	sha1_update(ctx, buffer_1, count_1);
+	sha1_update(ctx, buffer_2, count_2);
+	sha1_final(ctx, digest);
 }
 
 static int
@@ -62,25 +62,25 @@ validateTOTP(char * secret_hex, char * TOTP_string)
 	// Convert the secret_hex into byte-wise version
 	// Equivalently 8 binary bits allocated in one slot
 	uint8_t secret_bin[SECRET_LEN / 2];
-    hex_to_bin(secret_hex, secret_bin);
+	hex_to_bin(secret_hex, secret_bin);
 
 	// Instanciate inner padding
-    uint8_t ipad[65];
-    memset(ipad, 0, sizeof(ipad));
+	uint8_t ipad[65];
+	memset(ipad, 0, sizeof(ipad));
 	memcpy(ipad, secret_bin, SECRET_LEN / 2);
 
 	// Instanciate outer padding
 	uint8_t opad[65];
-    memset(opad, 0, sizeof(opad));
-    memcpy(opad, secret_bin, SECRET_LEN / 2);
+	memset(opad, 0, sizeof(opad));
+	memcpy(opad, secret_bin, SECRET_LEN / 2);
 
 	// Initialize the correct values for both padding following this:
 	// inner padding: 0x36 XOR'ed for 64 times
 	// outer padding: 0x5c XOR'ed for 64 times
-    for (int i = 0; i < 64; i++) {
-        ipad[i] ^= 0x36;
-        opad[i] ^= 0x5c;
-    }
+	for (int i = 0; i < 64; i++) {
+		ipad[i] ^= 0x36;
+		opad[i] ^= 0x5c;
+	}
 
     uint8_t timer[DATA_SIZE];
     int counter = (time(NULL)) / 30;
@@ -91,8 +91,8 @@ validateTOTP(char * secret_hex, char * TOTP_string)
     }
 
 	SHA1_INFO ctx;
-    uint8_t inner_hash[SHA1_DIGEST_LENGTH];
-    uint8_t outer_hash[SHA1_DIGEST_LENGTH];
+	uint8_t inner_hash[SHA1_DIGEST_LENGTH];
+	uint8_t outer_hash[SHA1_DIGEST_LENGTH];
 
 	// Compute inner SHA1 hash
 	SHA1_hash(&ctx, ipad, 64, timer, DATA_SIZE, inner_hash);
@@ -102,17 +102,17 @@ validateTOTP(char * secret_hex, char * TOTP_string)
 
 	// The part below was written with reference to RFC6238
 	// Obtain binary code from the outer hashed value AKA HMAC
-    int offset = outer_hash[SHA1_DIGEST_LENGTH - 1] & 0xf;
-    int binary = ((outer_hash[offset] & 0x7f) << 24) |
-                 ((outer_hash[offset + 1] & 0xff) << 16) |
-                 ((outer_hash[offset + 2] & 0xff) << 8) |
-                 (outer_hash[offset + 3] & 0xff);
+	int offset = outer_hash[SHA1_DIGEST_LENGTH - 1] & 0xf;
+	int binary = ((outer_hash[offset] & 0x7f) << 24) |
+					((outer_hash[offset + 1] & 0xff) << 16) |
+					((outer_hash[offset + 2] & 0xff) << 8) |
+					(outer_hash[offset + 3] & 0xff);
 
 	// Instanciate a lookup table
 	int powers_of_10[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000};
 
 	// Evaluate and return True or False (1 or 0)
-    return ((binary % powers_of_10[CODE_LEN]) == atoi(TOTP_string));
+	return ((binary % powers_of_10[CODE_LEN]) == atoi(TOTP_string));
 }
 
 int
